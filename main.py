@@ -1,7 +1,12 @@
 
+from yahoo_finance import Share
+
 def main():
 
-	print "hello world"
+	tesla = Share('TSLA')
+
+	print tesla.get_open() # open price today
+
 
 
 if __name__ == '__main__':
