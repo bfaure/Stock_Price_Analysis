@@ -1,5 +1,5 @@
 # Stock_Price_Analysis
-Playing around with stock price prediction via several indicators fed into a FF-ML Perceptron.
+Playing around with stock price prediction via several indicators fed into a FF-ML Perceptron. Using Python 2.7 & various libraries (see Dependencies)
 
 ## Focus
 
