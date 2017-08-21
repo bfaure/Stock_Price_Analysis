@@ -5,8 +5,12 @@
 # for plotting features...
 import matplotlib.pyplot as plt
 
+'''
 # for machine learning stuff...
-#import keras
+from keras.layer.core import Dense, Avctivation, Dropout
+from keras.layer.recurrent import LSTM
+from keras.models import Sequential
+'''
 
 # alternate stock price data source...
 #from googlefinance import getQuotes
@@ -18,6 +22,42 @@ import matplotlib.pyplot as plt
 import quandl
 
 #######################################################
+
+'''
+def make_model():
+
+	model = Sequential()
+	model.add(LSTM(
+		input_dim=1,
+		output_dim=50,
+		return_sequences=True))
+	model.add(Dropout(0.2))
+
+	model.add(LSTM(
+		100,
+		return_sequences=False
+		))
+	model.add(Dropout(0.2))
+
+	model.add(Dense(
+		output_dim=1))
+	model.(Activation('linear'))
+
+	
+	model.compile(loss='mse',optimizer='rmsprop')
+
+	return model 
+
+
+def train_model(model,X_train,y_train):
+	model.fit(
+		X_train,
+		y_train,
+		batch_size=512,
+		nb_epoch=1,
+		validation_split=0.05)
+'''
+
 
 # shouldn't really have this on a public repo but fuck it
 def set_api_key(key="X6zvDM1FEEkWU7H1w___"):
@@ -50,6 +90,18 @@ def get_table_dates(data):
 	dates = axes[0]
 	return dates
 
+def normalize(column):
+	n_list = []
+	col_size = len(column)
+	last_item = None
+	for i in range(col_size):
+		current_item = column[i]
+		if last_item!=None:
+			perc = (current_item-last_item) / last_item
+			perc *= 100.0
+			n_list.append(perc)
+		last_item = current_item
+	return n_list 
 
 # plots the input data
 def plot(xaxis,ylabel="Data"):
@@ -63,9 +115,12 @@ def main():
 
 	data = get_data()
 
-	highs = get_table_column(data,"High")
+	highs = get_table_column(data,"Adj_High")
 
-	plot(highs)
+	highs_normalized = normalize(highs)
+
+	#$plot(highs)
+	plot(highs_normalized)
 
 
 if __name__ == '__main__':
