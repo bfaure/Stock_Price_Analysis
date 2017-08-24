@@ -23,6 +23,9 @@ import quandl
 # for array manipulation (prep for keras)
 import numpy as np
 
+# for writing to terminal
+import sys
+
 
 #######################################################
 
@@ -178,7 +181,9 @@ def save_model(model,fname="model.h5"):
 
 # loads the model from specified file name
 def load_our_model(fname="model.h5"):
+	sys.stdout.write("Loading model... ")
 	model = load_model(fname)
+	sys.stdout.write("success\n")
 	return model 
 
 # predicts future values using the provided model and last element of the dataset.
@@ -187,19 +192,29 @@ def load_our_model(fname="model.h5"):
 # n is the number of data points to predict
 def predict_future(model,data,look_back,n=50):
 
-	# we only need the last look_back number of data points for the first prediction
-	first_inputs = data[len(data)-look_back:]
+	i=0
+	while i<n:
 
-	# convert to numpy array
-	first_inputs = np.array(first_inputs)
+		# we only need the last look_back number of data points for the first prediction
+		inputs = data[len(data)-look_back:]
 
-	# reshape the numpy array to fit model input
-	#first_inputs = np.reshape(first_inputs,(first_inputs.shape[0],1,first_inputs.shape[1]))
+		# putting into another list to emulate training inputs
+		inputs = [inputs]
 
-	# get a prediction
-	prediction = model.predict(first_inputs)
+		# convert to numpy array
+		inputs = np.array(inputs)
 
-	print "prediction: "+str(prediction)
+		# reshape the numpy array to fit model input
+		inputs = np.reshape(inputs,(inputs.shape[0],1,inputs.shape[1]))
+
+		# get a prediction
+		prediction = model.predict(inputs)
+
+		# add the prediction to the data list
+		data.append(prediction)
+
+		# increment prediction count
+		i+=1
 
 	return data
 
@@ -289,7 +304,9 @@ def main():
 		model = load_our_model()
 
 	# predict 50 prices in the future
-	prediction = predict_future(None,data,look_back)
+	predictions = predict_future(model,data,look_back,n=1000)
+
+	plot(predictions)
 
 if __name__ == '__main__':
 	main()
