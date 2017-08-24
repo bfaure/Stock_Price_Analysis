@@ -3,6 +3,10 @@ Playing around with stock price prediction via several indicators fed into a FF-
 
 ## Focus
 
+RNN Schematic
+
+![Alt text](https://github.com/bfaure/Stock_Price_Analysis/blob/master/resources/RNN-unrolled.png)
+
 Multilayer Perceptron Schematic
 
 ![Alt text](https://github.com/bfaure/Stock_Price_Analysis/blob/master/resources/mlp.jpg)
