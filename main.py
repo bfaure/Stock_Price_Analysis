@@ -5,12 +5,10 @@
 # for plotting features...
 import matplotlib.pyplot as plt
 
-'''
 # for machine learning stuff...
-from keras.layer.core import Dense, Avctivation, Dropout
-from keras.layer.recurrent import LSTM
 from keras.models import Sequential
-'''
+from keras.layers import Dense
+from keras.layers import LSTM
 
 # alternate stock price data source...
 #from googlefinance import getQuotes
@@ -23,6 +21,7 @@ import quandl
 
 # for array manipulation (prep for keras)
 import numpy as np
+
 
 #######################################################
 
@@ -167,7 +166,28 @@ def train_test_split(data,split=0.7):
 
 	print "finished train/test split"
 
+	print "converting to numpy arrays..."
+
+	train_X = np.array(train_X)
+	train_y = np.array(train_y)
+	test_X = np.array(test_X)
+	test_y = np.array(test_y)
+
+	print "converted successfully!"
+
+	print "reshaping"
+
+	train_X = np.reshape(train_X,(train_X.shape[0],1,train_X.shape[1]))
+	test_X = np.reshape(test_X,(test_X.shape[0],1,test_X.shape[1]))
+
 	return train_X,train_y,test_X,test_y
+
+def fit_model(train_X,train_y,test_X,test_y,look_back=1):
+	model = Sequential()
+	model.add(LSTM(4, input_shape=(1, look_back)))
+	model.add(Dense(1))
+	model.compile(loss='mean_squared_error', optimizer='adam')
+	model.fit(train_X, train_y, epochs=100, batch_size=1, verbose=2)
 
 
 # saves the data to a file
@@ -229,13 +249,21 @@ def main():
 	#data = get_data()
 	#save_data(data)
 
+	look_back = 1
+
 	data = load_spec_data()
 	
-	prepped = prepare_data(data)
+	prepped = prepare_data(data,look_back=look_back)
 
-	print prepped
+	train_X,train_y,test_X,test_y = train_test_split(prepped)
 
+	print "shapes..."
+	print train_X.shape
+	print train_y.shape
+	print test_X.shape
+	print test_y.shape
 
+	fit_model(train_X,train_y,test_X,test_y,look_back=look_back)
 
 if __name__ == '__main__':
 	main()
