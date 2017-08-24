@@ -167,12 +167,12 @@ def train_test_split(data,look_back,split=0.7):
 	return train_X,train_y,test_X,test_y
 
 # builds a new model and fits it to the provided data
-def fit_model(train_X,train_y,test_X,test_y,look_back):
+def fit_model(train_X,train_y,test_X,test_y,look_back,epochs=100):
 	model = Sequential()
 	model.add(LSTM(4, input_shape=(1, look_back)))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error', optimizer='adam')
-	model.fit(train_X, train_y, epochs=30, batch_size=1, verbose=1)
+	model.fit(train_X, train_y, epochs=epochs, batch_size=1, verbose=1)
 	return model
 
 # saves the model passed as a parameter, to the name fname
@@ -275,14 +275,25 @@ def main():
 	#save_data(data)
 	"""
 
+	# whether or not to normalize the data
+	do_normalize = True
+
 	# whether or not to retrain the model, if not, loading from disk
-	retrain = False
+	retrain = True
 
 	# number of inputs (prices) used to predict output (price)
-	look_back = 2
+	look_back = 3
+
+	# how many epochs to train the network on
+	epochs = 100
 
 	# load in a single column (adjusted high)
 	data = load_spec_data()
+
+	if do_normalize:
+
+		# normalize the data
+		data = normalize(data)
 
 	# prepare the data for splitting
 	prepped = prepare_data(data,look_back=look_back)
@@ -293,7 +304,7 @@ def main():
 	if retrain:
 
 		# build the model and fit to the data
-		model = fit_model(train_X,train_y,test_X,test_y,look_back=look_back)
+		model = fit_model(train_X,train_y,test_X,test_y,look_back=look_back,epochs=epochs)
 
 		# save the model to a file (so we can load later instead of retraining)
 		save_model(model)
