@@ -169,7 +169,7 @@ def fit_model(train_X,train_y,test_X,test_y,look_back=1):
 	model.add(LSTM(4, input_shape=(1, look_back)))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error', optimizer='adam')
-	model.fit(train_X, train_y, epochs=100, batch_size=1, verbose=2)
+	model.fit(train_X, train_y, epochs=30, batch_size=1, verbose=2)
 	return model
 
 # saves the model passed as a parameter, to the name fname
@@ -180,6 +180,14 @@ def save_model(model,fname="model.h5"):
 def load_model(fname="model.h5"):
 	model = load_model(fname)
 	return model 
+
+# predicts future values using the provided model and last element of the dataset.
+# data should be a single vector (single column), look_back is used to index into
+# the data column, predictions are used as new input to generate new predictions
+def predict_future(model,data,look_back,n=50):
+
+	first_input = data[]
+
 
 # saves the data to a file
 def save_data(data,fname="stock_data.tsv"):
