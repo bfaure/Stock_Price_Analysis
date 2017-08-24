@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.models import load_model
 
 # alternate stock price data source...
 #from googlefinance import getQuotes
@@ -24,42 +25,6 @@ import numpy as np
 
 
 #######################################################
-
-'''
-def make_model():
-
-	model = Sequential()
-	model.add(LSTM(
-		input_dim=1,
-		output_dim=50,
-		return_sequences=True))
-	model.add(Dropout(0.2))
-
-	model.add(LSTM(
-		100,
-		return_sequences=False
-		))
-	model.add(Dropout(0.2))
-
-	model.add(Dense(
-		output_dim=1))
-	model.(Activation('linear'))
-
-	
-	model.compile(loss='mse',optimizer='rmsprop')
-
-	return model 
-
-
-def train_model(model,X_train,y_train):
-	model.fit(
-		X_train,
-		y_train,
-		batch_size=512,
-		nb_epoch=1,
-		validation_split=0.05)
-'''
-
 
 # shouldn't really have this on a public repo but fuck it
 def set_api_key(key="X6zvDM1FEEkWU7H1w___"):
@@ -142,9 +107,12 @@ def prepare_data(data,look_back=1):
 # the specified train/test split, with 0.7 as a default. Also converts to
 # numpy arrays (required by keras) and splits into X and y components. 
 # the final output is train_X, train_y, test_X, test_y.
-def train_test_split(data,split=0.7):
+def train_test_split(data,look_back=1,split=0.7):
 
 	print "performing train/test split, data length is "+str(len(data))
+
+	print "sample data row:"
+	print data[0]
 
 	y = [] # outputs
 	X = [] # inputs
@@ -156,8 +124,13 @@ def train_test_split(data,split=0.7):
 
 	for d in data:
 		y.append(d[-1])
-		X.append(d[:len(d)-2])
+		X.append(d[:-1])
 	
+	print "sample, X[0]:"
+	print X[0]
+	print "sample, y[0]:"
+	print y[0]
+
 	train_X = X[:train_length]
 	train_y = y[:train_length]
 
@@ -165,7 +138,6 @@ def train_test_split(data,split=0.7):
 	test_y = y[train_length:]
 
 	print "finished train/test split"
-
 	print "converting to numpy arrays..."
 
 	train_X = np.array(train_X)
@@ -173,22 +145,41 @@ def train_test_split(data,split=0.7):
 	test_X = np.array(test_X)
 	test_y = np.array(test_y)
 
-	print "converted successfully!"
+	'''
+	print "shapes..."
+	print train_X.shape
+	print train_y.shape
+	print test_X.shape
+	print test_y.shape
+	'''
 
+	print "converted successfully!"
 	print "reshaping"
 
+	# inputs should be of the form [samples, timesteps, features]
+	# aka [samples, look_back, after look_back]
 	train_X = np.reshape(train_X,(train_X.shape[0],1,train_X.shape[1]))
 	test_X = np.reshape(test_X,(test_X.shape[0],1,test_X.shape[1]))
 
 	return train_X,train_y,test_X,test_y
 
+# builds a new model and fits it to the provided data
 def fit_model(train_X,train_y,test_X,test_y,look_back=1):
 	model = Sequential()
 	model.add(LSTM(4, input_shape=(1, look_back)))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error', optimizer='adam')
 	model.fit(train_X, train_y, epochs=100, batch_size=1, verbose=2)
+	return model
 
+# saves the model passed as a parameter, to the name fname
+def save_model(model,fname="model.h5"):
+	model.save(fname)
+
+# loads the model from specified file name
+def load_model(fname="model.h5"):
+	model = load_model(fname)
+	return model 
 
 # saves the data to a file
 def save_data(data,fname="stock_data.tsv"):
@@ -249,19 +240,21 @@ def main():
 	#data = get_data()
 	#save_data(data)
 
-	look_back = 1
+	look_back = 2
 
 	data = load_spec_data()
 	
 	prepped = prepare_data(data,look_back=look_back)
 
-	train_X,train_y,test_X,test_y = train_test_split(prepped)
+	train_X,train_y,test_X,test_y = train_test_split(prepped,look_back=look_back)
 
+	'''
 	print "shapes..."
 	print train_X.shape
 	print train_y.shape
 	print test_X.shape
 	print test_y.shape
+	'''
 
 	fit_model(train_X,train_y,test_X,test_y,look_back=look_back)
 
