@@ -81,7 +81,7 @@ def plot(xaxis,ylabel="Data"):
 # and returns a matrix. for example, with a look_back set to 1 we would
 # return: [0,1], [1,2], [2,3]
 # the (look_back+1) is the number of elements in each row of the returned matrix
-def prepare_data(data,look_back=1):
+def prepare_data(data,look_back):
 
 	print "preparing data of length "+str(len(data))
 
@@ -107,7 +107,7 @@ def prepare_data(data,look_back=1):
 # the specified train/test split, with 0.7 as a default. Also converts to
 # numpy arrays (required by keras) and splits into X and y components. 
 # the final output is train_X, train_y, test_X, test_y.
-def train_test_split(data,look_back=1,split=0.7):
+def train_test_split(data,look_back,split=0.7):
 
 	print "performing train/test split, data length is "+str(len(data))
 
@@ -164,12 +164,12 @@ def train_test_split(data,look_back=1,split=0.7):
 	return train_X,train_y,test_X,test_y
 
 # builds a new model and fits it to the provided data
-def fit_model(train_X,train_y,test_X,test_y,look_back=1):
+def fit_model(train_X,train_y,test_X,test_y,look_back):
 	model = Sequential()
 	model.add(LSTM(4, input_shape=(1, look_back)))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error', optimizer='adam')
-	model.fit(train_X, train_y, epochs=30, batch_size=1, verbose=2)
+	model.fit(train_X, train_y, epochs=30, batch_size=1, verbose=1)
 	return model
 
 # saves the model passed as a parameter, to the name fname
@@ -177,17 +177,31 @@ def save_model(model,fname="model.h5"):
 	model.save(fname)
 
 # loads the model from specified file name
-def load_model(fname="model.h5"):
+def load_our_model(fname="model.h5"):
 	model = load_model(fname)
 	return model 
 
 # predicts future values using the provided model and last element of the dataset.
 # data should be a single vector (single column), look_back is used to index into
-# the data column, predictions are used as new input to generate new predictions
+# the data column, predictions are used as new input to generate new predictions.
+# n is the number of data points to predict
 def predict_future(model,data,look_back,n=50):
 
-	first_input = data[]
+	# we only need the last look_back number of data points for the first prediction
+	first_inputs = data[len(data)-look_back:]
 
+	# convert to numpy array
+	first_inputs = np.array(first_inputs)
+
+	# reshape the numpy array to fit model input
+	#first_inputs = np.reshape(first_inputs,(first_inputs.shape[0],1,first_inputs.shape[1]))
+
+	# get a prediction
+	prediction = model.predict(first_inputs)
+
+	print "prediction: "+str(prediction)
+
+	return data
 
 # saves the data to a file
 def save_data(data,fname="stock_data.tsv"):
@@ -237,34 +251,45 @@ def load_spec_data(column="Adj_High",fname="stock_data.tsv"):
 def main():
 	set_api_key()
 
+	"""
 	#data = get_data()
-
 	#highs = get_table_column(data,"Adj_High")
-
 	#highs_normalized = normalize(highs)
-
 	#plot(highs_normalized)
-
 	#data = get_data()
 	#save_data(data)
+	"""
 
+	# whether or not to retrain the model, if not, loading from disk
+	retrain = False
+
+	# number of inputs (prices) used to predict output (price)
 	look_back = 2
 
+	# load in a single column (adjusted high)
 	data = load_spec_data()
-	
+
+	# prepare the data for splitting
 	prepped = prepare_data(data,look_back=look_back)
-
+	
+	# split the data into training and testing
 	train_X,train_y,test_X,test_y = train_test_split(prepped,look_back=look_back)
+	
+	if retrain:
 
-	'''
-	print "shapes..."
-	print train_X.shape
-	print train_y.shape
-	print test_X.shape
-	print test_y.shape
-	'''
+		# build the model and fit to the data
+		model = fit_model(train_X,train_y,test_X,test_y,look_back=look_back)
 
-	fit_model(train_X,train_y,test_X,test_y,look_back=look_back)
+		# save the model to a file (so we can load later instead of retraining)
+		save_model(model)
+
+	else:
+
+		# load the model from disk
+		model = load_our_model()
+
+	# predict 50 prices in the future
+	prediction = predict_future(None,data,look_back)
 
 if __name__ == '__main__':
 	main()
